@@ -1,0 +1,6 @@
+redis:
+  address: "localhost:6379"
+  password:
+
+server:
+  port: 8080
