@@ -22,6 +22,12 @@ func NewCryptoPriceService(storageCache *cache.RedisClient) *CryptoService {
 	}
 }
 
+func NewCryptoPriceServiceTest(storageCache cache.ICache) *CryptoService {
+	return &CryptoService{
+		storageCache: storageCache,
+	}
+}
+
 func (cs CryptoService) CryptoPriceService() (models.Crypto, error) {
 	cryptoPrice, err := cs.GetPriceFromCache(constants.BITCOIN)
 	return cryptoPrice, err
@@ -85,11 +91,11 @@ func (cs CryptoService) getLiveCryptoPrice(cryptoName string) (models.Crypto, er
 		constants.EUR_PRICE: coinDeskresponse.GetPrice(constants.EUR_PRICE),
 	}
 	crypto = models.NewCrypto(constants.BITCOIN, price)
-	isValueSet, err := cs.storageCache.SetPrice(crypto)
+	cs.storageCache.SetPrice(crypto)
 
-	if err != nil || isValueSet == false {
-		logger.Error(err.Error())
-		return models.Crypto{}, errors.New("error while setting value in cache")
-	}
+	//if err != nil || isValueSet == false {
+	//	logger.Error(err.Error())
+	//	return models.Crypto{}, errors.New("error while setting value in cache")
+	//}
 	return crypto, err
 }
