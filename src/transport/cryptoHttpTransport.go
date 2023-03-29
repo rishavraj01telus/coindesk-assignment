@@ -9,8 +9,6 @@ func CryptoHttpTransport(routerGroup *gin.RouterGroup, cs *CryptoService) {
 	routerGroup.GET("/price", cryptoPriceHandler(cs))
 }
 
-var cs CryptoService
-
 func cryptoPriceHandler(cs *CryptoService) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
