@@ -1,44 +1,47 @@
-package main
+package service
 
 import (
 	"coindesk/cache"
+	"coindesk/client"
 	"coindesk/constants"
 	"coindesk/models"
-	"encoding/json"
 	"go.uber.org/zap"
-	"net/http"
+	"golang.org/x/net/context"
 )
 
 type CryptoService struct {
 	storageCache cache.ICache
+	cryptoClient client.ICryptoClient
 }
 
 var logger, _ = zap.NewProduction()
 
-func NewCryptoPriceService(storageCache *cache.RedisClient) *CryptoService {
-	return &CryptoService{
-		storageCache: cache.NewCacheStorage(storageCache),
-	}
-}
-
-func NewCryptoPriceServiceTest(storageCache cache.ICache) *CryptoService {
+func NewCryptoPriceService(storageCache cache.ICache, cryptoClient client.ICryptoClient) *CryptoService {
 	return &CryptoService{
 		storageCache: storageCache,
+		cryptoClient: cryptoClient,
 	}
 }
 
-func (cs *CryptoService) CryptoPriceService() (models.Crypto, error) {
-	cryptoPrice, err := cs.GetPriceFromCache(constants.BITCOIN)
+func NewCryptoPriceServiceTest(storageCache cache.ICache, cryptoClient client.ICryptoClient) *CryptoService {
+	return &CryptoService{
+		storageCache: storageCache,
+		cryptoClient: cryptoClient,
+	}
+}
+
+func (cs *CryptoService) CryptoPriceService(ctx context.Context) (models.Crypto, error) {
+	cryptoPrice, err := cs.GetPriceFromCache(ctx, constants.BITCOIN)
 	return cryptoPrice, err
 }
 
-func (cs *CryptoService) GetPriceFromCache(cryptoName string) (models.Crypto, error) {
+func (cs *CryptoService) GetPriceFromCache(ctx context.Context, cryptoName string) (models.Crypto, error) {
 
-	storedCryptoPrice, err := cs.getPriceFromCacheUtil(cryptoName)
+	storedCryptoPrice, err := cs.getPriceFromCacheUtil(ctx, cryptoName)
 	if err == nil {
 		return storedCryptoPrice, err
 	}
-	cryptoLivePrice, err := cs.getLiveCryptoPrice(cryptoName)
+	cryptoLivePrice, err := cs.GetLiveCryptoPrice(ctx, cryptoName)
 	if err == nil {
 		return cryptoLivePrice, err
 	}
@@ -46,10 +49,10 @@ func (cs *CryptoService) GetPriceFromCache(cryptoName string) (models.Crypto, er
 	return models.Crypto{}, err
 }
 
-func (cs *CryptoService) getPriceFromCacheUtil(cryptoName string) (models.Crypto, error) {
+func (cs *CryptoService) getPriceFromCacheUtil(ctx context.Context, cryptoName string) (models.Crypto, error) {
 
 	logger.Info("Getting price from cache....")
-	cachePrice, err := cs.storageCache.GetPrice(cryptoName)
+	cachePrice, err := cs.storageCache.GetPrice(ctx, cryptoName)
 
 	if err != nil {
 		logger.Error(err.Error())
@@ -65,26 +68,26 @@ func (cs *CryptoService) getPriceFromCacheUtil(cryptoName string) (models.Crypto
 	}, nil
 }
 
-func (cs *CryptoService) getLiveCryptoPrice(cryptoName string) (models.Crypto, error) {
+func (cs *CryptoService) GetLiveCryptoPrice(ctx context.Context, cryptoName string) (models.Crypto, error) {
 
 	logger.Info("Getting live crypto price: ", zap.String("crypto", cryptoName))
-	response, err := http.Get(constants.COINDESK_ENDPOINT)
+	response, err := cs.cryptoClient.GetCurrentPrice()
 
-	if err != nil || response.StatusCode != 200 {
+	if err != nil {
 		logger.Error(err.Error())
 		return models.Crypto{}, err
 	}
 
 	var crypto models.Crypto
-	crypto = cs.parseResponse(response, err)
-	cs.setCryptoPrice(crypto)
+	crypto = cs.parseResponse(response)
+	cs.setCryptoPrice(ctx, crypto)
 
 	return crypto, err
 }
 
-func (cs *CryptoService) setCryptoPrice(crypto models.Crypto) bool {
+func (cs *CryptoService) setCryptoPrice(ctx context.Context, crypto models.Crypto) bool {
 
-	isPriceSet, err := cs.storageCache.SetPrice(crypto)
+	isPriceSet, err := cs.storageCache.SetPrice(ctx, crypto)
 
 	if err != nil {
 		logger.Error(err.Error())
@@ -93,20 +96,12 @@ func (cs *CryptoService) setCryptoPrice(crypto models.Crypto) bool {
 	return isPriceSet
 }
 
-func (cs *CryptoService) parseResponse(response *http.Response, err error) models.Crypto {
-
-	var coinDeskresponse models.CoinDeskResponse
-
-	err = json.NewDecoder(response.Body).Decode(&coinDeskresponse)
-
-	if err != nil {
-		logger.Error("error while decoding coinDesk Response\"")
-		return models.Crypto{}
-	}
+func (cs *CryptoService) parseResponse(coinDeskResponse models.CoinDeskResponse) models.Crypto {
 
 	price := map[string]string{
-		constants.USD_PRICE: coinDeskresponse.GetPrice(constants.USD_PRICE),
-		constants.EUR_PRICE: coinDeskresponse.GetPrice(constants.EUR_PRICE),
+		constants.USD_PRICE: coinDeskResponse.GetPrice(constants.USD_PRICE),
+		constants.EUR_PRICE: coinDeskResponse.GetPrice(constants.EUR_PRICE),
 	}
 	return models.NewCrypto(constants.BITCOIN, price)
+
 }

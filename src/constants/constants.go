@@ -6,4 +6,4 @@ const USD_PRICE = "USD"
 
 var EXPIRY float64 = 600
 
-const BITCOIN = "bitcoin"
+const BITCOIN = "Bitcoin"

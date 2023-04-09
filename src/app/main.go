@@ -2,6 +2,8 @@ package main
 
 import (
 	"coindesk/cache"
+	"coindesk/client"
+	"coindesk/constants"
 	"coindesk/service"
 	"coindesk/transport"
 	"github.com/gin-gonic/gin"
@@ -16,7 +18,8 @@ func main() {
 	var (
 		redisClient, err = cache.NewRedisClient()
 		cacheStorage     = cache.NewCacheStorage(redisClient)
-		cs               = service.NewCryptoPriceService(&cacheStorage)
+		client           = client.NewCoindeskClient(constants.COINDESK_ENDPOINT)
+		cs               = service.NewCryptoPriceService(&cacheStorage, client)
 	)
 
 	if err != nil {

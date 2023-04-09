@@ -6,6 +6,7 @@ package mocks
 
 import (
 	models "coindesk/models"
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,31 +36,31 @@ func (m *MockICache) EXPECT() *MockICacheMockRecorder {
 }
 
 // GetPrice mocks base method.
-func (m *MockICache) GetPrice(arg0 string) (models.Crypto, error) {
+func (m *MockICache) GetPrice(arg0 context.Context, arg1 string) (models.Crypto, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPrice", arg0)
+	ret := m.ctrl.Call(m, "GetPrice", arg0, arg1)
 	ret0, _ := ret[0].(models.Crypto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPrice indicates an expected call of GetPrice.
-func (mr *MockICacheMockRecorder) GetPrice(arg0 interface{}) *gomock.Call {
+func (mr *MockICacheMockRecorder) GetPrice(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrice", reflect.TypeOf((*MockICache)(nil).GetPrice), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrice", reflect.TypeOf((*MockICache)(nil).GetPrice), arg0, arg1)
 }
 
 // SetPrice mocks base method.
-func (m *MockICache) SetPrice(arg0 models.Crypto) (bool, error) {
+func (m *MockICache) SetPrice(arg0 context.Context, arg1 models.Crypto) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPrice", arg0)
+	ret := m.ctrl.Call(m, "SetPrice", arg0, arg1)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SetPrice indicates an expected call of SetPrice.
-func (mr *MockICacheMockRecorder) SetPrice(arg0 interface{}) *gomock.Call {
+func (mr *MockICacheMockRecorder) SetPrice(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPrice", reflect.TypeOf((*MockICache)(nil).SetPrice), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPrice", reflect.TypeOf((*MockICache)(nil).SetPrice), arg0, arg1)
 }

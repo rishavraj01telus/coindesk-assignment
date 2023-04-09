@@ -1,8 +1,11 @@
 package cache
 
-import "coindesk/models"
+import (
+	"coindesk/models"
+	"golang.org/x/net/context"
+)
 
 type ICache interface {
-	SetPrice(crypto models.Crypto) (bool, error)
-	GetPrice(cryptoIdentifier string) (models.Crypto, error)
+	SetPrice(ctx context.Context, crypto models.Crypto) (bool, error)
+	GetPrice(ctx context.Context, cryptoIdentifier string) (models.Crypto, error)
 }

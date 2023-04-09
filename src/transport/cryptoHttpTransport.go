@@ -1,23 +1,26 @@
-package main
+package transport
 
 import (
+	s "coindesk/service"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 )
 
-func CryptoHttpTransport(routerGroup *gin.RouterGroup, cs *CryptoService) {
+var logger, _ = zap.NewProduction()
+
+func CryptoHttpTransport(routerGroup *gin.RouterGroup, cs *s.CryptoService) {
 	routerGroup.GET("/price", cryptoPriceHandler(cs))
 }
 
-func cryptoPriceHandler(cs *CryptoService) gin.HandlerFunc {
+func cryptoPriceHandler(cs *s.CryptoService) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
-		price, err := cs.CryptoPriceService()
+		price, err := cs.CryptoPriceService(ctx)
 
 		if err != nil {
 			logger.Error(err.Error())
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-
+			ctx.JSON(http.StatusOK, gin.H{"error": err.Error()})
 		}
 
 		ctx.JSON(http.StatusOK, gin.H{
